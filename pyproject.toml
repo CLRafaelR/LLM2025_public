@@ -1,0 +1,122 @@
+[project]
+name = "LLM2025"
+version = "0.0.1"
+description = "LLM2025"
+readme = "README.md"
+authors = [{ name = "Masataka Ogawa", email = "ogawa.phiz@gamil.com" }]
+maintainers = [{ name = "Masataka Ogawa", email = "ogawa.phiz@gamil.com" }]
+classifiers = [
+    # TODO
+]
+license = { text = "MIT" }
+dependencies = [
+    "accelerate>=1.12.0",
+    "bitsandbytes==0.46.1",
+    "compressed-tensors==0.12.2",
+    "datasets<4.5",
+    "docling>=2.73.0",
+    "fastapi[standard]>=0.128.0",
+    "fastmcp>=2.11.2",
+    "fire>=0.7.1",
+    "flash-attn",
+    "huggingface-hub>=0.36.2",
+    "matplotlib>=3.10.8",
+    "ninja>=1.13.0",
+    "numpy>=2.2.6",
+    "nvidia-cutlass-dsl==4.3.5",
+    "openai==2.15.0",
+    "packaging>=24.1",
+    "pandas>=2.3.3",
+    "paperbanana[dev,google]",
+    "peft>=0.18.1",
+    "psutil>=7.2.1",
+    "pydantic-settings>=2.12.0",
+    "requests>=2.32.3,<3.0.0",
+    "schedulefree>=1.4.1",
+    "seaborn>=0.13.2",
+    "supabase>=2.28.0",
+    "transformers==4.57.3",
+    "triton==3.5.0",
+    "trl>0.23",
+    "typer",
+    "unsloth==2026.2.1",
+    "unsloth-zoo==2026.2.1",
+    "vllm==0.13.0",
+    "wandb>=0.25.0",
+    "xformers>=0.0.32.post2",
+    "xgrammar==0.1.27",
+]
+requires-python = ">= 3.10"
+
+[project.optional-dependencies]
+test = [
+    "coverage", # testing
+    "pytest",   # testing
+    "ruff",     # linting
+    "ty",       # checking types
+    "ipdb",     # debugging
+]
+# cu129 = ["markupsafe<=2.1.5", "torch<=2.8", "torchvision>=0.23.0"]
+
+[project.urls]
+bugs = "https://github.com/CLRafaelR/LLM2025/issues"
+changelog = "https://github.com/CLRafaelR/LLM2025/blob/master/changelog.md"
+homepage = "https://github.com/CLRafaelR/LLM2025"
+
+[project.scripts]
+LLM2025 = "LLM2025.cli:app"
+
+[tool.ty]
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple/"
+# All rules are enabled as "error" by default; no need to specify unless overriding.
+# Example override: relax a rule for the entire project (uncomment if needed).
+# rules.TY015 = "warn"  # For invalid-argument-type, warn instead of error.
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu129"
+url = "https://download.pytorch.org/whl/cu129"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # Pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
+]
+
+[tool.uv]
+package = true
+
+[tool.uv.sources]
+markupsafe = { index = "pytorch-cu129" }
+torch = { index = "pytorch-cu129" }
+torchvision = { index = "pytorch-cu129" }
+flash-attn = { url = "https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3+cu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl" }
+paperbanana = { git = "https://github.com/llmsresearch/paperbanana.git" }
+requests = { index = "pypi" }
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.1.0",
+    "ipywidgets>=8.1.8",
+    "jupyter>=1.1.1",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.13",
+    "ty>=0.0.13",
+]
