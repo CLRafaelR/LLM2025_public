@@ -33,6 +33,7 @@ Author: Person K (original), improved by community
 """
 
 import json
+import os
 import re
 import argparse
 import pandas as pd
@@ -109,7 +110,28 @@ def validate_format(text, fmt):
         return False, str(e)
 
 
-def evaluate_with_task_id(public_file, inference_file, save_errors=True):
+def _get_rating_text(overall_rate: float) -> str:
+    """Return rating emoji and text for a given overall_rate.
+
+    Args:
+        overall_rate: Evaluation score as a percentage (0–100).
+
+    Returns:
+        Rating string with emoji.
+    """
+    if overall_rate >= 90:
+        return "✅ 提出候補として検討可能"
+    if overall_rate >= 80:
+        return "△ 要検討。弱点フォーマットの改善を推奨"
+    return "⚠️ 見直し推奨。フォーマットエラーが多い"
+
+
+def evaluate_with_task_id(
+    public_file,
+    inference_file,
+    save_errors=True,
+    error_output_dir=".",
+):
     """
     推論結果を評価する。
 
@@ -187,16 +209,11 @@ def evaluate_with_task_id(public_file, inference_file, save_errors=True):
     print("=" * 60)
 
     # 判定と推奨
-    if overall_rate >= 90:
-        print("✅ 提出候補として検討可能")
-    elif overall_rate >= 80:
-        print("△ 要検討。弱点フォーマットの改善を推奨")
-    else:
-        print("⚠️ 見直し推奨。フォーマットエラーが多い")
+    _get_rating_text(overall_rate=overall_rate)
 
     # エラー詳細の保存
     if errors and save_errors:
-        error_file = "validation_errors.json"
+        error_file = os.path.join(error_output_dir, "validation_errors.json")
         print(f"\n📝 Found {len(errors)} errors. Saving to '{error_file}'...")
         with open(error_file, "w", encoding="utf-8") as f:
             json.dump(errors, f, indent=2, ensure_ascii=False)
@@ -213,6 +230,7 @@ def evaluate_with_task_id(public_file, inference_file, save_errors=True):
         "total_count": total_count,
         "stats": dict(stats),
         "error_count": len(errors),
+        "errors": errors,
     }
 
 

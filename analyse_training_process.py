@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import re
-from functools import reduce
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,26 +15,8 @@ from scripts.scan_outputs_dir.manipulate_outputs_dir import (
     list_subdir_names,
     build_adapter_id,
     check_hf_repo_exists,
+    parse_training_config,
 )
-
-_CONFIG_KEYS: tuple[tuple[str, str], ...] = (
-    ("- Base model:", "Base model"),
-    ("- Method:", "Method"),
-    ("- Max sequence length:", "Max sequence length"),
-    ("- Epochs:", "Epochs"),
-    ("- Learning rate:", "Learning rate"),
-    ("- LoRA:", "LoRA"),
-    ("- Lora target modules:", "Lora target modules"),
-    ("- Lora dropout:", "Lora dropout"),
-    ("- Per device batch size:", "Per device batch size"),
-    ("- Gradient accumulation step:", "Gradient accumulation step"),
-)
-
-_THINK_STYLE_MAP: dict[str, str] = {
-    "Reasoning CoT text was stored inside `<think>...</think>` tags and included in the training data as-is.": "full",
-    "Reasoning CoT text was removed, and only empty `<think>\\n</think>` tags were retained in the training data.": "tag-only",
-    "Reasoning CoT text was removed entirely, and no `<think>` tags were added to the training data.": "remove",
-}
 
 _THINK_STYLE_ORDER: tuple[str, ...] = ("full", "tag-only", "remove")
 
@@ -85,61 +66,6 @@ def extract_loss_trace(current_dir: str, max_ckpt: int) -> pd.DataFrame | None:
         if "epoch" in entry and "loss" in entry
     ]
     return pd.DataFrame(rows) if rows else None
-
-
-def parse_training_config(current_dir: str) -> dict[str, str] | None:
-    """Parse the Training Configuration section from README.md.
-
-    Reads the README.md in ``current_dir`` and extracts key-value pairs
-    from the ``## Training Configuration`` section.  Returns None for
-    Unsloth auto-generated READMEs that lack this section.
-
-    Args:
-        current_dir: Path to the training run directory.
-
-    Returns:
-        Dict mapping config key names to their values, or None if the
-        section is absent or the file cannot be read.
-    """
-    readme_path = os.path.join(current_dir, "README.md")
-    try:
-        with open(readme_path) as f:
-            text = f.read()
-    except Exception:
-        return None
-
-    section_match = re.search(
-        r"## Training Configuration\n(.*?)(?:\n##|\Z)",
-        text,
-        re.DOTALL,
-    )
-    if not section_match:
-        return None
-
-    section_text = section_match.group(1)
-
-    def _extract_key(acc: dict[str, str], kv: tuple[str, str]) -> dict[str, str]:
-        prefix, key = kv
-        line_match = re.search(
-            rf"^{re.escape(prefix)}\s*(.+)$",
-            section_text,
-            re.MULTILINE,
-        )
-        if line_match:
-            return {**acc, key: line_match.group(1).strip()}
-        return acc
-
-    raw = reduce(_extract_key, _CONFIG_KEYS, {})
-    if not raw:
-        return None
-
-    think_match = re.search(
-        r"^- Treatment of reasoning CoT:\s*(.+)$",
-        text,
-        re.MULTILINE,
-    )
-    think_raw = think_match.group(1).strip() if think_match else ""
-    return {**raw, "think_style": _THINK_STYLE_MAP.get(think_raw, think_raw)}
 
 
 def build_training_spec(adapter_id: str, config: dict[str, str]) -> pd.DataFrame:

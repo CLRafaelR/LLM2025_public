@@ -101,3 +101,11 @@ uv run python analyse_training_process.py
 ```bash
 uv run python inference.py
 ```
+
+### 事後学習後モデルの推論結果の確認
+
+```bash
+uv run python eval_inference_results.py
+```
+
+![](./docs/assets/all_validation.png)
